@@ -2,6 +2,7 @@ using log4net.Util;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -16,6 +17,8 @@ public class GrassRendererEditor : Editor
 
     static bool painting = false;
     static bool erease = false;
+
+    static LayerMask layer = ~0;
 
     static float grassDensity = 0.2f;
     static Vector2Int grassFieldSize = new Vector2Int(20, 20);
@@ -39,27 +42,7 @@ public class GrassRendererEditor : Editor
         EditorGUILayout.PropertyField(meshProp);
         if (GUILayout.Button("RecalculateBounds"))
         {
-            var t = (GrassRenderer)target;
-            float[] bounds = new float[6]{ // right, left, up, down, forward, back
-                t.GetGrassPositions[0].x,
-                t.GetGrassPositions[0].x,
-                t.GetGrassPositions[0].y,
-                t.GetGrassPositions[0].y,
-                t.GetGrassPositions[0].z,
-                t.GetGrassPositions[0].z
-            };
-            foreach (var v in t.GetGrassPositions)
-            {
-                if (v.x > bounds[0]) bounds[0] = v.x;
-                else if (v.x < bounds[1]) bounds[1] = v.x;
-                if (v.y > bounds[2]) bounds[2] = v.y;
-                else if (v.y < bounds[3]) bounds[3] = v.y;
-                if(v.z > bounds[4]) bounds[4] = v.z;
-                else if(v.z < bounds[5]) bounds[5] = v.z;
-            }
-            Vector3 size = new Vector3(bounds[0] - bounds[1], bounds[2] - bounds[3], bounds[4] - bounds[5]) + t.mesh.bounds.size;
-            Vector3 center = new Vector3(bounds[0] + bounds[1], bounds[2] + bounds[3], bounds[4] + bounds[5])/2f + t.mesh.bounds.center;
-            t.grassBounds = new Bounds(center,size);
+            GenerateBounds();
         }
         EditorGUILayout.LabelField("Create grass field");
         EditorGUI.indentLevel++;
@@ -69,17 +52,45 @@ public class GrassRendererEditor : Editor
         {
             ((GrassRenderer)target).CreateGrassArray(grassFieldSize, grassDensity);
             ((GrassRenderer)target).RegenerateGrassField();
+            GenerateBounds();
         }
         EditorGUI.indentLevel--;
         EditorGUILayout.LabelField("Painting");
         EditorGUI.indentLevel++;
         painting = GUILayout.Toggle(painting, "Brush", new GUIStyle("Button"));
         erease = GUILayout.Toggle(erease, "Ereaser", new GUIStyle("Button"));
+        layer = EditorGUILayout.MaskField("Painting layers",InternalEditorUtility.LayerMaskToConcatenatedLayersMask(layer), InternalEditorUtility.layers);
         radius = EditorGUILayout.Slider("Brush radius", radius, 0.1f, 10f);
         density = EditorGUILayout.Slider("Brush density", density, 0.05f, 0.7f);
         distance = EditorGUILayout.Slider("Paint distance", distance, 0.1f, 10f);
         EditorGUI.indentLevel--;
         serializedObject.ApplyModifiedProperties();
+    }
+
+    private void GenerateBounds()
+    {
+        var t = (GrassRenderer)target;
+        float[] bounds = new float[6]{ // right, left, up, down, forward, back
+                t.GetGrassPositions[0].x,
+                t.GetGrassPositions[0].x,
+                t.GetGrassPositions[0].y,
+                t.GetGrassPositions[0].y,
+                t.GetGrassPositions[0].z,
+                t.GetGrassPositions[0].z
+            };
+        foreach (var v in t.GetGrassPositions)
+        {
+            if (v.x > bounds[0]) bounds[0] = v.x;
+            else if (v.x < bounds[1]) bounds[1] = v.x;
+            if (v.y > bounds[2]) bounds[2] = v.y;
+            else if (v.y < bounds[3]) bounds[3] = v.y;
+            if (v.z > bounds[4]) bounds[4] = v.z;
+            else if (v.z < bounds[5]) bounds[5] = v.z;
+        }
+        Vector3 size = new Vector3(bounds[0] - bounds[1], bounds[2] - bounds[3], bounds[4] - bounds[5]) + t.mesh.bounds.size;
+        Vector3 center = new Vector3(bounds[0] + bounds[1], bounds[2] + bounds[3], bounds[4] + bounds[5]) / 2f + t.mesh.bounds.center;
+        t.grassBounds = new Bounds(center, size);
+        t.transform.hasChanged = true;
     }
 
     private void OnSceneGUI()
@@ -95,7 +106,7 @@ public class GrassRendererEditor : Editor
 
         if (Event.current.type == EventType.Repaint)
         {
-            Physics.Raycast(cursorRay, out var hit);
+            Physics.Raycast(cursorRay, out var hit, 1000f, layer, QueryTriggerInteraction.Ignore);
             Handles.color = Color.yellow;
             Handles.DrawWireDisc(hit.point, hit.normal, radius, 1f);
             Handles.DrawWireDisc(hit.point, hit.normal, density, 0.5f);
@@ -104,7 +115,7 @@ public class GrassRendererEditor : Editor
         var currentEvent = Event.current.type;
         if (currentEvent == EventType.MouseDown || currentEvent == EventType.MouseDrag || currentEvent == EventType.MouseUp || currentEvent == EventType.DragPerform || currentEvent == EventType.DragUpdated || currentEvent == EventType.DragExited)
         {
-            if (Physics.Raycast(cursorRay, out var hit))
+            if (Physics.Raycast(cursorRay, out var hit, 1000f, layer, QueryTriggerInteraction.Ignore))
             {
                 if ((Event.current.type == EventType.MouseDown && Event.current.button == 0) || (Event.current.type == EventType.DragPerform && Event.current.button == 0))
                 {
@@ -126,6 +137,7 @@ public class GrassRendererEditor : Editor
                 {
                     GUIUtility.hotControl = controlId;
                     ((GrassRenderer)target).RegenerateGrassField();
+                    GenerateBounds();
                     Event.current.Use();
                 }
 
