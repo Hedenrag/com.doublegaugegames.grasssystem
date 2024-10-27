@@ -1,3 +1,4 @@
+using log4net.Util;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -85,7 +86,7 @@ public class GrassRendererEditor : Editor
     {
         GrassRenderer t = target as GrassRenderer;
         Handles.color = Color.yellow;
-        Handles.DrawWireCube(t.grassBounds.center, t.grassBounds.size);
+        Handles.DrawWireCube(t.transform.localToWorldMatrix.MultiplyPoint(t.grassBounds.center), t.grassBounds.size);
 
         if (!painting) return;
         Ray cursorRay = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);

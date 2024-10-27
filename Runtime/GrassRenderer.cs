@@ -88,7 +88,7 @@ public class GrassRenderer : MonoBehaviour
 
         //Rendering
         renderParams = new RenderParams(material);
-        renderParams.worldBounds = grassBounds;
+        renderParams.worldBounds = new Bounds(transform.localToWorldMatrix.MultiplyPoint(grassBounds.center), grassBounds.size);
         renderParams.matProps = new MaterialPropertyBlock();
         renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
         renderParams.matProps.SetBuffer("_GrassPositions", positionsBuffer);
@@ -100,6 +100,10 @@ public class GrassRenderer : MonoBehaviour
 
     void Update()
     {
+#if UNITY_EDITOR
+        transform.rotation = Quaternion.identity;
+#endif
+
         if (!rendererReady) return;
 
         if (transform.hasChanged)
