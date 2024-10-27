@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Custom_InstancingTest
+  m_Name: GrassSimpleInstancingMaterial
   m_Shader: {fileID: 4800000, guid: 0e8b61d420d9a8049b1b5b45c67e5792, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
