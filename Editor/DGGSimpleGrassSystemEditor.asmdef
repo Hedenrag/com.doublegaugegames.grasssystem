@@ -1,0 +1,18 @@
+{
+    "name": "DGGSimpleGrassSystemEditor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:57ddda58c88768d48b0b1eb1fb6b3c09"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
