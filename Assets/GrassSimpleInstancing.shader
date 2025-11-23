@@ -20,6 +20,7 @@ Shader "Custom/InstancingTest"
         }
         LOD 100
         Cull Off
+        Zwrite On
 
         Pass
         {

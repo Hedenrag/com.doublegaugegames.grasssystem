@@ -117,6 +117,7 @@ public class GrassRendererEditor : Editor
         {
             if (Physics.Raycast(cursorRay, out var hit, 1000f, layer, QueryTriggerInteraction.Ignore))
             {
+                Undo.RecordObject(target, "Grass draw");
                 if ((Event.current.type == EventType.MouseDown && Event.current.button == 0) || (Event.current.type == EventType.DragPerform && Event.current.button == 0))
                 {
                     GUIUtility.hotControl = controlId;
